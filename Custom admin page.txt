@@ -1,0 +1,1 @@
+everytime when we create a custom admin page, we need to delete the db.sqlite3 and those migration files, 0001 or 0002, then python manage.py runserver, new db.sqlite3 will occur again
