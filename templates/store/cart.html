@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+
+
+
+<section class="section-content padding-y bg">
+<div class="container">
+
+<!-- ============================ COMPONENT 1 ================================= -->
+{% if not cart_items %}
+<!--print some messages-->
+<h1 style="color:green" class="text-center">Your Shopping Cart is Empty</h1>
+<br>
+<div class="text-center">
+<a style="color:red" href="{% url 'store' %}" class="btn btn-secondary">Continue Shopping</a>
+</div>
+{% else %}
+<div class="row">
+	<aside class="col-lg-9">
+<div class="card">
+<table class="table table-borderless table-shopping-cart">
+<thead class="text-muted">
+<tr class="small text-uppercase">
+  <th scope="col">Product</th>
+  <th scope="col" width="120">Quantity</th>
+  <th scope="col" width="120">Price</th>
+  <th scope="col" class="text-right" width="200"> </th>
+</tr>
+</thead>
+<tbody>
+{% for abc in cart_items %}
+<tr>
+	<td>
+		<figure class="itemside align-items-center">
+			<div class="aside"><img src="{{abc.product.images.url}}" class="img-sm"></div>
+			<figcaption class="info">
+				<a href="{{abc.product.get_url}}" class="title text-dark">{{abc.product.product_name}}</a>
+				<p class="text-muted small">
+					{% if abc.variations.all %}	<!--take all the variation model to here-->
+						{% for item in abc.variations.all %}
+							{{item.variation_category|capfirst}}:{{item.variation_value}} <br>
+						{% endfor %}
+					{% endif %}
+				</p>
+			</figcaption>
+		</figure>
+	</td>
+	<td> 
+		<!-- col.// -->
+					<div class="col"> 
+						<div class="input-group input-spinner">
+							<div class="input-group-prepend">
+						<a href="{% url 'remove_cart' abc.product.id abc.pk %}" class="btn btn-light" type="button" id="button-plus"><i class="fa fa-minus"></i></a>
+						</div>
+							<input type="text" class="form-control"  value="{{abc.quantity}}">
+							<div class="input-group-append">
+						<form action="{% url "add_cart" abc.product.pk %}" method="POST">
+							{% csrf_token %}
+							{% for item in abc.variations.all %}	<!--this length of code is to retrieve the product variations,then look thru the ex_var_list see whether the variations exist or not, if yes, then add 1-->
+							<input type="hidden" name="{{item.variation_category|lower}}" value="{{item.variation_value|capfirst}}">
+							{% endfor %}
+							<button class="btn btn-light" type="submit" id="button-minus"> <i class="fa fa-plus"></i> </button>
+						</form>
+						</div>
+						</div> <!-- input-group.// -->
+					</div> <!-- col.// -->
+	</td>
+	<td> 
+		<div class="price-wrap"> 
+			<var class="price">${{abc.sub_total| floatformat:2}}</var> 
+			<small class="text-muted"> ${{abc.product.price| floatformat:2}} each </small> 
+		</div> <!-- price-wrap .// -->
+	</td>
+	<td class="text-right"> 
+		<!--some javascript will applied-->
+	<a href="{% url 'remove_cart_item' abc.product.pk abc.id %}" onclick="return confirm('Are you sure you want to delete this item?')" class="btn btn-danger"> Remove</a>
+	</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+</div> <!-- card.// -->
+
+	</aside> <!-- col.// -->
+	<aside class="col-lg-3">
+
+		<div class="card">
+		<div class="card-body">
+			<dl class="dlist-align">
+			  <dt>Total price:</dt>
+			  <dd class="text-right">${{total| floatformat:2}}</dd>
+			</dl>
+			<dl class="dlist-align">
+			  <dt>Tax:</dt>
+			  <dd class="text-right"> ${{tax|floatformat:2}}</dd>
+			</dl>
+			<dl class="dlist-align">
+			  <dt>Total:</dt>
+			  <dd class="text-right text-dark b"><strong>${{grand_total|floatformat:2}}</strong></dd>
+			</dl>
+			<hr>
+			<p class="text-center mb-3">
+				<img src="{% static './images/misc/payments.png' %}" height="26">
+			</p>
+			<a href="./place-order.html" class="btn btn-primary btn-block"> Checkout </a>
+			<a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
+		</div> <!-- card-body.// -->
+		</div> <!-- card.// -->
+
+</aside> <!-- col.// -->
+
+
+</div> <!-- row.// -->
+{% endif %}
+<!-- ============================ COMPONENT 1 END .// ================================= -->
+
+</div> <!-- container .//  -->
+</section>
+<!-- ========================= SECTION CONTENT END// ========================= -->
+
+{% endblock content %}

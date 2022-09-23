@@ -19,6 +19,38 @@ class Product(models.Model):
 
     def get_url(self):
         return reverse('products_detail',args=[self.category.slug,self.slug])
-    
 
+class variationmanager(models.Manager):
+    def colour(self):
+        return super(variationmanager,self).filter(variation_category='colour',is_active=True)
+    
+    def size(self):
+        return super(variationmanager,self).filter(variation_category='size',is_active=True)
+
+    #tips of the day: super(variationmanager,self)=super()
+    def length(self):
+        return super().filter(variation_category='length',is_active=True)
+
+variation_category_choice=(
+    ('colour','colour'),    #as you remember that once you change the right side, the whole name will change too in admin page
+    ('size','size'),
+    ('length','logo'),
+)
+
+class variation(models.Model):
+    product=models.ForeignKey(Product,on_delete=models.CASCADE)
+    variation_category=models.CharField(max_length=200,choices=variation_category_choice)
+    variation_value=models.CharField(max_length=200)
+    is_active=models.BooleanField(default=True)
+    created_date=models.DateTimeField(auto_now_add=True)
+
+    objects=variationmanager()  #link the variationmanager to the variation_category, so the colour and sizc
+
+    # def __unicode__(self):
+    #     return self.is_active
+
+    def __str__(self):
+        return self.variation_value
+    
+    
 

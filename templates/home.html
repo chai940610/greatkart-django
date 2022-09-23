@@ -2,6 +2,7 @@
 {% load static %}
 
 {% block content %}
+
 <!-- ========================= SECTION MAIN ========================= -->
 <section class="section-intro padding-y-sm">
 <div class="container">
@@ -32,7 +33,7 @@
 			<a href="{{abc.get_url}}" class="img-wrap"> <img src="{{abc.images.url}}"> </a>
 			<figcaption class="info-wrap">
 				<a href="{{abc.get_url}}" class="title">{{abc.product_name}}</a>
-				<div class="price mt-1">${{abc.price}}</div> <!-- price-wrap.// -->
+				<div class="price mt-1">${{abc.price|floatformat:2}}</div> <!-- price-wrap.// -->
 			</figcaption>
 		</div>
 	</div> <!-- col.// -->
