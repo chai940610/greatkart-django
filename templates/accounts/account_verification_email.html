@@ -1,0 +1,7 @@
+{% autoescape off %}
+Hi {{user.first_name}},
+
+Please click on below links to confirm your registration.
+http://{{domain}}{% url 'activate' uidb64=uid token=token %}    {% comment %} when you click on this links, the token will automatically get expired  {% endcomment %}
+if you think It's not you, please ignore this email.
+{% endautoescape %}

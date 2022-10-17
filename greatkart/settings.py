@@ -35,7 +35,7 @@ INSTALLED_APPS = [
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
-    'django.contrib.messages',
+    'django.contrib.messages',  #django messages already installed automatically
     'django.contrib.staticfiles',
     'category',
     'accounts',
@@ -133,3 +133,15 @@ STATICFILES_DIRS=[      #for my understanding, this one is used when you use col
 # media files configuration
 MEDIA_URL='/media/'
 MEDIA_ROOT=BASE_DIR/'media'
+
+from django.contrib.messages import constants as messages
+MESSAGE_TAGS = {
+    messages.ERROR: 'danger',  #messages.INFO is the bootstrap class, all these are CSS and bootstrap class, they can be any constant
+}
+
+#configure email, SMTP configuration
+EMAIL_HOST='smtp.gmail.com'
+EMAIL_PORT=587  #gmail is 587
+EMAIL_HOST_USER='chai061094@gmail.com'
+EMAIL_HOST_PASSWORD='tmxzruzauulnganv'
+EMAIL_USE_TLS=True

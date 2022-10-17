@@ -37,7 +37,7 @@ def add_cart(request,product_id):
             #1) for item in request.POST: , get all the item from the <form> in product_detail.html, which is method POST, and you found that the select icon and the CSRF will occur
             #print(key,value) the results shows out the CSRF token,the colour variation, size, all these data will occured because you select something, once you select something and thru POST method, all these will print out
             try:
-                variation1=variation.objects.get(variation_category__iexact=key,variation_value__iexact=value)
+                variation1=variation.objects.get(variation_category__iexact=key,variation_value__iexact=value)  #understand how this work? once you search the POST method thru the product_detail.html <form> things, then the key will all go inside the variation_category, then value will go to variation_value, then iexact means find any of them match each other or not? if matched, then grab it
                 # print(variation1)
                 product_variation.append(variation1)    #do you know what append means? means link something to the object
                 print(product_variation)

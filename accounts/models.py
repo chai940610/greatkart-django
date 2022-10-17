@@ -3,6 +3,7 @@ from django.db import models
 #two things need to create own admin page
 from django.contrib.auth.models import AbstractBaseUser,BaseUserManager
 # Create your custom admin page
+from django.core.exceptions import ValidationError
 
 #create model for superadmin
 class MyAccountManager(BaseUserManager):
@@ -11,7 +12,7 @@ class MyAccountManager(BaseUserManager):
             raise ValueError('Email address is invalid')
         if not username:
             raise ValueError('User must have an username')
-        user=self.model(
+        user=self.model(    #here no phone number, so can add it thru views.py
             email=self.normalize_email(email),
             username=username,
             first_name=first_name,
@@ -30,7 +31,7 @@ class MyAccountManager(BaseUserManager):
             first_name=first_name,
             last_name=last_name,
         )
-        user.is_admin=True
+        user.is_admin=True  #all these term cannot modify must remember
         user.is_active=True
         user.is_staff=True
         user.is_superadmin=True
@@ -42,7 +43,7 @@ class Account(AbstractBaseUser):
     last_name=models.CharField(max_length=200)
     username=models.CharField(max_length=200,unique=True)
     email=models.EmailField(unique=True)
-    phone_number=models.CharField(max_length=20)
+    phone_number=models.CharField(max_length=200)
     #mandatory
     date_joined=models.DateTimeField(auto_now_add=True)
     last_login=models.DateTimeField(auto_now=True)
@@ -66,4 +67,5 @@ class Account(AbstractBaseUser):
     
     def has_module_perms(self,add_label):
         return True
+    
 
