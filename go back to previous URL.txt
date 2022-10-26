@@ -1,0 +1,14 @@
+once in the cart page, and user didn't sign in, so when the user tekan checkout, we want the page redirect to the checkout page.
+
+hereby the solution
+1) install the request
+	pip install requests
+
+2) import requests to te views.py
+	import requests
+
+3) then use this thing
+	url=request.META.get('HTTP_REFERER')	#HTTP_REFERER is grab the previous URL from where you came
+
+4) query=requests.utils.urlparse(url).query
+

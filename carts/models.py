@@ -1,5 +1,6 @@
 from django.db import models
 from store.models import Product,variation
+from accounts.models import Account
 
 class Cart(models.Model):
     #adding only two field
@@ -10,9 +11,10 @@ class Cart(models.Model):
         return self.cart_id
 
 class CartItem(models.Model):
+    user=models.ForeignKey(Account,on_delete=models.CASCADE,null=True)
     product=models.ForeignKey(Product,on_delete=models.CASCADE)
     variations=models.ManyToManyField(variation,blank=True) #many product can have same variation,right?
-    cart=models.ForeignKey(Cart,on_delete=models.CASCADE)
+    cart=models.ForeignKey(Cart,on_delete=models.CASCADE,null=True)
     quantity=models.PositiveIntegerField()
     is_active=models.BooleanField(default=True)
 

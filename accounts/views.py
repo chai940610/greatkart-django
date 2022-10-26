@@ -1,5 +1,6 @@
 from email import message
 from http.client import HTTPResponse
+from itertools import product
 from django.shortcuts import render,redirect
 from django.contrib import messages,auth
 from accounts.models import Account
@@ -14,7 +15,9 @@ from django.utils.http import urlsafe_base64_encode,urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import EmailMessage
-
+from carts.models import Cart,CartItem
+from carts.views import _cart_id
+import requests
 
 def register(request):
     if request.method=="POST":
@@ -54,11 +57,71 @@ def login(request):
     if request.method=="POST":
         email=request.POST['email']
         password=request.POST['password']
-        user=auth.authenticate(email=email,password=password)
-        if user is not None:    #mean the email and password are corrected
-            auth.login(request,user)
+        user1=auth.authenticate(email=email,password=password)
+        if user1 is not None:    #mean the email and password are corrected
+            #before login use the try block
+            try:
+                print("ABC1")
+                cart=Cart.objects.get(cart_id=_cart_id(request))    #okay, if we have anything insde the cart
+                is_cart_item_exists=CartItem.objects.filter(cart=cart).exists() #once get the cart_id, then check inside the cart got item or not, if got equal to True, if no False
+                print(is_cart_item_exists)
+                if is_cart_item_exists:
+                    cart_item=CartItem.objects.filter(cart=cart)    #get all those item in the cart to the cart_item
+                    product_variation=[]
+                    #getting the product variation by cart id
+                    for item in cart_item:
+                        variation=item.variations.all()
+                        product_variation.append(list(variation))
+                        item_quantity=item.quantity.all()
+                        item_quantity+=item_quantity
+                    print(item_quantity)
+                    #get the cart items from the userto access his product variations
+                    cart_item1=CartItem.objects.filter(user=user1)
+            
+                    ex_var_list=[]
+                    id=[]
+                    item_number=[]
+                    for item in cart_item1:
+                        existing_variation=item.variations.all()
+                        ex_var_list.append(list(existing_variation)) 
+                        id.append(item.id)
+
+                    #explaination for product variation and ex_car_list
+                    # product_variation=[1,2,3,4,5,6]
+                    # ex_var_list=[6,4,2,1]
+
+                    #to get common variation
+                    for pr in product_variation:
+                        if pr in ex_var_list:
+                            index=ex_var_list.index(pr)
+                            item_id=id[index]
+                            item=CartItem.objects.get(id=item_id)
+                            item.quantity+=1
+                            item.user=user1
+                            item.save()
+                        else:
+                            cart_item=CartItem.objects.filter(cart=cart)
+                            for item in cart_item:
+                                item.user=user1 #assign the user, the right side user is from line 58
+                                item.save()
+            except:
+                pass    #means there is no cart item insde the cart
+            auth.login(request,user1)
             messages.success(request,'You are now logged in.')
-            return redirect('dashboard')
+            url=request.META.get('HTTP_REFERER')   #HTTP_REFERER is grab the previous URL from where you came
+            try:
+                query=requests.utils.urlparse(url).query
+                print('query ->',query) #this code is check next destination go where
+                #take the query to the next page, next/cart/checkout/
+                params=dict(x.split('=') for x in query.split('&')) #param is a parameter to split the '='
+                print('-----------')
+                print('params ->',params)
+                if 'next' in params:
+                    nextPage=params['next']
+                    return redirect(nextPage)
+                
+            except:
+                return redirect('dashboard')
         else:
             messages.error(request,'Invalid login credentials') #mean invalid email and password
             return redirect('login')
