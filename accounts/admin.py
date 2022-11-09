@@ -13,6 +13,6 @@ class AccountAdmin(UserAdmin):
     readonly_fields=('last_login','date_joined')
     ordering=('-date_joined',)   #list in descening order
 
-#for custom admin
+#for custom admindsdfs
 admin.site.register(Account,AccountAdmin)
 

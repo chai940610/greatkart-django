@@ -1,0 +1,213 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+
+
+
+
+<section class="section-content padding-y bg">
+<div class="container">
+
+<!-- ============================ COMPONENT 1 ================================= -->
+<h4 class="text-center mb-10">Review Your Order and Make Payment</h4>
+<div class="row">
+	<aside class="col-lg-8">
+        <div class="card">
+            <h5 class="card-header">Billing Address</h5>
+            <div class="card-body">
+              <p class="card-text mb-0"><b>Name:</b>{{order.full_name}}</p>
+              <p class="card-text mb-0"><b>Address:</b>{{order.full_address}}</p>
+              <p class="card-text mb-0"><b>State:</b>{{order.city}},{{order.state}}</p>
+              <p class="card-text mb-0"><b>Country:</b>{{order.country}}</p>
+              <p class="card-text mb-0"><b>Email:</b>{{order.email}}</p>
+              <p class="card-text mb-0"><b>Phone Number:</b>{{order.phone}}</p>
+              {% if order.order_note %} <!--if the order note is not empty-->
+                <b>Order Note:</b>{{order.order_note}}
+              {% endif %}
+            </div>
+          </div>
+              <div class="card">
+                <h5 class="card-header">Payment Method</h5>
+                <div class="card-body">
+                  <p class="card-text">Credit Card/Debit Card</p>
+                </div>
+                <div class="card">
+                    <h5 class="card-header">Review Products</h5>
+                    <div class="card-body">
+						<table class="table table-borderless table-shopping-cart">
+							<thead class="text-muted">
+							<tr class="small text-uppercase">
+							  <th scope="col">Product</th>
+							  <th scope="col" width="120">Quantity</th>
+							  <th scope="col" width="120">Price</th>
+							</tr>
+							</thead>
+							<tbody>
+							{% for abc in cart_items %}
+							<tr>
+								<td>
+									<figure class="itemside align-items-center">
+										<div class="aside"><img src="{{abc.product.images.url}}" class="img-sm"></div>
+										<figcaption class="info">
+											<a href="{{abc.product.get_url}}" class="title text-dark">{{abc.product.product_name}}</a>
+											<p class="text-muted small">
+												{% if abc.variations.all %}	<!--take all the variation model to here-->
+													{% for item in abc.variations.all %}
+														{{item.variation_category|capfirst}}:{{item.variation_value}} <br>
+													{% endfor %}
+												{% endif %}
+											</p>
+										</figcaption>
+									</figure>
+								</td>
+								<td> 
+									<label for="">{{abc.quantity}}</label>     
+								</td>
+								<td> 
+									<div class="price-wrap"> 
+										<var class="price">${{abc.sub_total| floatformat:2}}</var> 
+										<small class="text-muted"> ${{abc.product.price| floatformat:2}} each </small> 
+										
+								</td>
+									</div> <!-- price-wrap .// -->
+								</td>
+								
+							{% endfor %}
+							</tbody>
+							</table>
+                    </div>
+	</aside> <!-- col.// -->
+	<aside class="col-lg-4">
+
+		<div class="card">
+		<div class="card-body">
+			<dl class="dlist-align">
+			  <dt>Total price:</dt>
+			  <dd class="text-right">${{total| floatformat:2}}</dd>
+			</dl>
+			<dl class="dlist-align">
+			  <dt>Tax:</dt>
+			  <dd class="text-right"> ${{tax|floatformat:2}}</dd>
+			</dl>
+			<dl class="dlist-align">
+			  <dt>Total:</dt>
+			  <dd class="text-right text-dark b"><strong>${{grand_total|floatformat:2}}</strong></dd>
+			</dl>
+			<hr>
+			<p class="text-center mb-3">
+				<img src="{% static './images/misc/payments.png' %}" height="26">
+			</p>
+			<div id="paypal-button-container">
+				<!--paypal button will load-->
+
+			</div>
+			<a href="{% url 'store' %}" class="btn btn-light btn-block">Continue Shopping</a>
+		</div> <!-- card-body.// -->
+		</div> <!-- card.// -->
+
+</aside> <!-- col.// -->
+
+
+</div> <!-- row.// -->
+
+<!-- ============================ COMPONENT 1 END .// ================================= -->
+
+</div> <!-- container .//  -->
+</section>
+<!-- ========================= SECTION CONTENT END// ========================= -->
+
+<script>
+	function getCookie(name) {
+		let cookieValue = null;
+		if (document.cookie && document.cookie !== '') {
+			const cookies = document.cookie.split(';');
+			for (let i = 0; i < cookies.length; i++) {
+				const cookie = cookies[i].trim();
+				// Does this cookie string begin with the name we want?
+				if (cookie.substring(0, name.length + 1) === (name + '=')) {
+					cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+					break;
+				}
+			}
+		}
+		return cookieValue;
+	}
+	var csrftoken = getCookie('csrftoken');
+	var amount="{{grand_total}}"
+	var url="{% url 'payment' %}"
+	var orderID="{{order.order_number}}"
+	var payment_method='Paypal'
+	var redirect_url="{% url 'order_complete' %}"
+	// Render the PayPal button into #paypal-button-container
+	paypal.Buttons({
+
+		style: {
+			color:  'blue',
+			shape:  'pill',
+			label:  'pay',
+			height: 40
+		},
+
+    
+
+		// Set up the transaction
+		createOrder: function(data, actions) {
+			return actions.order.create({
+				purchase_units: [{
+					amount: {
+						value: amount,
+					}
+				}]
+			});
+		},
+
+		// Finalize the transaction
+		onApprove: function(data, actions) {
+			return actions.order.capture().then(function(orderData) {
+				// Successful capture! For demo purposes:
+				console.log('Capture result', orderData, JSON.stringify(orderData, null, 2));
+				var transaction = orderData.purchase_units[0].payments.captures[0];
+				console.log(orderData);	//show the details of the transaction in console
+				sendData();	//we have to call sendData this function we make sure the data will be send
+				//create a new function and send the data back to the views.py or known as backend	
+				function sendData(){
+					// to do it we need use javascript in built function ,fetch
+					fetch(url,{
+						//send the data
+						method:"POST",
+						headers:{
+							"Content-type":"application/json",
+							"X-CSRFToken":csrftoken,	//CSRF token is needed due POST request,since we don't have token, so we need generate the token manually, but we can copy it from django document, URL=https://docs.djangoproject.com/en/4.1/howto/csrf/
+						},
+						body:JSON.stringify({
+							//what you want to send?
+							orderID:orderID,
+							transID:orderData.id,	//where is the transaction ID, example in the inspect browser, "id": "1VK98172BR3750401"
+							payment_method:payment_method,
+							status:orderData.status,
+						}),	//don't need to remember all these, just go to website and search, https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch, uploading JSON data
+					})	//to the url where our data should go, send the data to payments.view
+  					.then((response) => response.json())
+  					.then((data) => {
+						console.log('Success: ',data);	//this data is from orders.views.py line 140 that data
+						console.log('Transaction Completed.');
+						//then redirect the user to success page
+						window.location.href=redirect_url + '?order_number='+data.order_number+'&payment_id='+data.transID; //remember this, javascript, redirect url is the variable,why we put order number and payment_id, we want to fetch all the data, thru GET request
+					});
+				}
+				alert('Transaction '+ transaction.status + ': ' + transaction.id + '\n\nSee console for all available details');	//alerts is a text box after you did a transaction, they will appear
+
+				// Replace the above to show a success message within this page, e.g.
+				// const element = document.getElementById('paypal-button-container');
+				// element.innerHTML = '';
+				// element.innerHTML = '<h3>Thank you for your payment!</h3>';
+				// Or go to another URL:  actions.redirect('thank_you.html');
+			});
+		}
+
+
+	}).render('#paypal-button-container');
+</script>
+
+
+{% endblock content %}
