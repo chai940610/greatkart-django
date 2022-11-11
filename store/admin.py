@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Product,variation
+from .models import Product,variation,ReviewRating
 
 class babi(admin.ModelAdmin):
     prepopulated_fields={'slug':('product_name',)}
@@ -13,4 +13,4 @@ class dummy(admin.ModelAdmin):
 
 admin.site.register(Product,babi)
 admin.site.register(variation,dummy)
-
+admin.site.register(ReviewRating)
