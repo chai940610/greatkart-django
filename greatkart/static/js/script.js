@@ -57,6 +57,7 @@ $(document).ready(function() {
     
 }); 
 // jquery end
+//fdgfmmmmmmmmmmmmmmmmmsd
 
 setTimeout(function(){
     $('#babi3').fadeOut('slow')

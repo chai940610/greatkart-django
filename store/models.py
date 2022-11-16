@@ -2,6 +2,8 @@ from django.db import models
 from django.urls import reverse
 from category.models import Category
 from accounts.models import Account
+from django.db.models import Avg,Count
+
 
 class Product(models.Model):
     product_name=models.CharField(max_length=200,unique=True)
@@ -20,6 +22,21 @@ class Product(models.Model):
 
     def get_url(self):
         return reverse('products_detail',args=[self.category.slug,self.slug])
+
+    #calculate the average rating for each product
+    def averageReview(self):
+        review=ReviewRating.objects.filter(product=self,status=True).aggregate(average=Avg('rating'))   #the rating is in the ReviewRating model, product=self, means filtering by this product
+        avg=0
+        if review['average'] is not None:
+            avg=float(review['average'])
+        return avg  #means the context will be avg
+
+    def countReview(self):
+        review=ReviewRating.objects.filter(product=self,status=True).aggregate(count=Count('id'))
+        count1=0
+        if review['count'] is not None:
+            count1=int(review['count'])
+        return count1  #means the context will be count1
 
 class variationmanager(models.Manager):
     def colour(self):

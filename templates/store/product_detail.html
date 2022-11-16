@@ -24,7 +24,17 @@
 	{% csrf_token %}
 	<article class="content-body">
 	<h2 class="title">{{single_product.product_name}}</h2>
-
+	<div class="rating-star">	<!--change the colour of the star,rating-star then go to custom.css-->
+		<span>
+			<!--font awesome star-->
+			<i class="fa fa-star{% if single_product.averageReview < 0.5 %}-o{% elif single_product.averageReview >= 0.5 and single_product.averageReview < 1 %}-half-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+			<i class="fa fa-star{% if single_product.averageReview < 1.5 %}-o{% elif single_product.averageReview >= 1.5 and single_product.averageReview < 2 %}-half-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+			<i class="fa fa-star{% if single_product.averageReview < 2.5 %}-o{% elif single_product.averageReview >= 2.5 and single_product.averageReview < 3 %}-half-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+			<i class="fa fa-star{% if single_product.averageReview < 3.5 %}-o{% elif single_product.averageReview >= 3.5 and single_product.averageReview < 4 %}-half-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+			<i class="fa fa-star{% if single_product.averageReview < 4.5 %}-o{% elif single_product.averageReview >= 4.5 and single_product.averageReview < 5 %}-half-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+			{{single_product.countReview}} reviews
+		</span>
+	</div>
 	<div class="mb-3"> 
 		<var class="price h4">${{single_product.price|floatformat:2}}</var> 
 	</div> 
@@ -80,7 +90,7 @@
 			{% comment %} <a href="#" class="btn btn-outline-info"> <span class="text">Added to cart</span> <i class="fas fa-check"></i>  </a>
 			<a href="{% url 'cart' %}" class="btn btn-outline-light"> <span class="text">View Cart</span> <i class="fas fa-eye"></i>  </a> {% endcomment %}
 			{% comment %} {% else %} {% endcomment %}
-			<button type="submit" class="btn btn-primary"> <span class="text">Add to Cart</span> <i class="fas fa-shopping-cart"></i>  </button>
+			<button type="submit" class="btn btn-primary"> <span class="text">Add to Cart</span> <i class="fa fa-shopping-cart"></i>  </button>
 			{% comment %} {% endif %} {% endcomment %}
 		{% endif %}
 	</article> <!-- product-info-aside .// -->
@@ -95,13 +105,13 @@
 <div class="row">
 			<div class="col-md-9">
 
-	<header class="section-heading">
-		<h3>Customer Reviews </h3>  
-		
-	</header>
-	<form action="" method="POST">
+	
+	<form action="{% url 'submit_review' single_product.id %}" method="POST">
 		{% csrf_token %}
 		<h2>Write Your Review</h2>
+		{% comment %} <b class="fa fa-star"></b>			understand how star work
+		<d class="fa fa-star-half-o"></d>
+		<g class="fa fa-star-o"></g> {% endcomment %}
 		<div>
 			<!--Rating Stars-->
 			<label>How do you rate this product?</label>
@@ -120,33 +130,73 @@
 				<input type="radio" name="rating" id="rating1" value="0.5" required><label for="rating1" title="0.5" class="half"></label>
 																			<!--so now give CSS to all those stars-->
 			</div>
+			<br>
+			
 			Review Title:
 			<input type="text" class="form-control" name="subject" >
 			<br>
 			Review:
 			<textarea name="review" rows="4" class="form-control" required></textarea>
 			<br>
+			{% if user.is_authenticated %}
+			{% if orderproduct %}
 			<input type="submit" value="Submit Review" class="btn btn-warning">
+			{% else %}
+			<p>You must purchase this product to post a review.</p>
+			{% endif %}
+			{% else %}
+			<p>You must be logged in to post a review.<span><a href="{% url 'login' %}">Login Now</a></span></p>
+			{% endif %}
 		</div>
+		{% include 'includes\alerts.html' %}
 	</form>
 	<br>
+	<header class="section-heading">
+		<h3>Customer Reviews </h3>
+		{{single_product.averageReview|floatformat:2}}
+		{{single_product.countReview}} reviews
+		<span>
+			<div class="rating-star">	<!--change the colour of the star,rating-star then go to custom.css-->
+			<span>
+				<!--font awesome star-->
+				<i class="fa fa-star{% if single_product.averageReview < 0.5 %}-o{% elif single_product.averageReview >= 0.5 and single_product.averageReview < 1 %}-half-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+				<i class="fa fa-star{% if single_product.averageReview < 1.5 %}-o{% elif single_product.averageReview >= 1.5 and single_product.averageReview < 2 %}-half-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+				<i class="fa fa-star{% if single_product.averageReview < 2.5 %}-o{% elif single_product.averageReview >= 2.5 and single_product.averageReview < 3 %}-half-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+				<i class="fa fa-star{% if single_product.averageReview < 3.5 %}-o{% elif single_product.averageReview >= 3.5 and single_product.averageReview < 4 %}-half-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+				<i class="fa fa-star{% if single_product.averageReview < 4.5 %}-o{% elif single_product.averageReview >= 4.5 and single_product.averageReview < 5 %}-half-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+			</span>
+		</div>
+		</span>
+		
+	</header>
+	{% for review in reviews %}
 	<article class="box mb-3">
 		<div class="icontext w-100">
-			<img src="{% static './images/avatars/avatar1.jpg' %}" class="img-xs icon rounded-circle">
+			{% comment %} <img src="{% static './images/avatars/avatar1.jpg' %}" class="img-xs icon rounded-circle"> {% endcomment %}
 			<div class="text">
-				<span class="date text-muted float-md-right">24.04.2020 </span>  
-				<h6 class="mb-1">Mike John </h6>
-				
+				<span class="date text-muted float-md-right">{{review.updated_at}}</span>  
+				<h6 class="mb-1">{{review.user.full_name}}</h6>
+				<div class="rating-star">	<!--change the colour of the star,rating-star then go to custom.css-->
+					<span>
+						<!--font awesome star-->
+						<i class="fa fa-star{% if review.rating == 0.5 %}-half-o{% elif review.rating < 1 %}-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+						<i class="fa fa-star{% if review.rating == 1.5 %}-half-o{% elif review.rating < 2 %}-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+						<i class="fa fa-star{% if review.rating == 2.5 %}-half-o{% elif review.rating < 3 %}-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+						<i class="fa fa-star{% if review.rating == 3.5 %}-half-o{% elif review.rating < 4 %}-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+						<i class="fa fa-star{% if review.rating == 4.5 %}-half-o{% elif review.rating < 5 %}-o{% endif %}" style="font-size:10px" aria-hidden="true"></i>
+					</span>
+				</div>
+				{{review.rating}}	<!--this one show out with alphabet but not star, to show the star, we need use fontawesome-->
 			</div>
 		</div> <!-- icontext.// -->
 		<div class="mt-3">
+			<h5>{{review.subject}}</h5>
 			<p>
-				Dummy comment Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod
-				tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam,
-				quis nostrud exercitation ullamco laboris nisi ut aliquip
+				{{review.review}}
 			</p>	
 		</div>
 	</article>
+	{% endfor %}
 
 	
 

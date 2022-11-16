@@ -1,17 +1,19 @@
 from ast import Or
 from django.http import HttpResponse
 from tokenize import Number
-from django.shortcuts import render,get_object_or_404
+from django.shortcuts import render,get_object_or_404,redirect
 from carts.models import CartItem
 from carts.views import _cart_id
 from category.models import Category
-from .models import Product
+from .models import Product,ReviewRating
 from carts.models import Cart,CartItem
 #paginator tools
 from django.core.paginator import EmptyPage,PageNotAnInteger,Paginator
 #search tools need to search mutiple things at the same time
 from django.db.models import Q
-
+from .forms import ReviewForm
+from django.contrib import messages
+from orders.models import OrderProduct
 
 def store(request,category_slug=None):
     categories=None
@@ -40,7 +42,17 @@ def product_detail(request,category_slug,product_slug):
         # exit()
     except Exception as e:
         raise e
-    return render(request,'store/product_detail.html',{'single_product':single_product,'in_cart':in_cart})
+        #check whether the user purchase this item before or not
+    if request.user.is_authenticated:
+        try:
+            orderproduct=OrderProduct.objects.filter(user=request.user,product_id=single_product.id).exists()   #check this person buy this item before or not
+        except OrderProduct.DoesNotExist:
+            orderproduct=None
+    else:
+        orderproduct=None
+    #get all the reviews
+    reviews=ReviewRating.objects.filter(product_id=single_product.pk,status=True)   #status=false for those review you don't want show out
+    return render(request,'store/product_detail.html',{'reviews':reviews,'orderproduct':orderproduct,'single_product':single_product,'in_cart':in_cart})
 
 def testing(request,babi=0):
     cart=Cart.objects.filter(cart_id=_cart_id(request))
@@ -56,3 +68,28 @@ def search(request,products=None):
             products=Product.objects.order_by('-created_date').filter(Q(product_name__icontains=keyword) | Q(description__icontains=keyword))
             products_count=products.count()
     return render(request,'store/store.html',{'products':products,'products_count':products_count,'keyword':keyword})
+
+
+def submit_review(request,product_id):
+    url=request.META.get('HTTP_REFERER')    #to store the previous URL
+    if request.method=="POST":
+        try:
+            #if the review already exist by the user, just updated it
+            reviews=ReviewRating.objects.get(user__id=request.user.id,product__id=product_id)  #why need two underscore? because we reference to the ReviewRating user id, so need two underscore
+            form=ReviewForm(request.POST,instance=reviews)   #request.POST we will having star, title and everything, why we need instance? because if the review had been created by the user, so we just update the review, if the review never created by the user, the review consider as new
+            form.save()
+            messages.success(request,'Thank you! Your review has been updated.')
+            return redirect(url)
+        except ReviewRating.DoesNotExist:   #which mean this is new comment, current user haven't post any comment
+            form=ReviewForm(request.POST)
+            if form.is_valid():
+                data=ReviewRating()
+                data.subject=form.cleaned_data['subject']
+                data.rating=form.cleaned_data['rating']
+                data.review=form.cleaned_data['review']
+                data.ip=request.META.get('REMOTE_ADDR') #ADDR is store the IP address
+                data.product_id=product_id
+                data.user_id=request.user.id
+                data.save()
+                messages.success(request,'Thank you! Your review has been submitted.')
+                return redirect(url)
